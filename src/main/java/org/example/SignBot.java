@@ -1,19 +1,38 @@
 package org.example;
 
+import org.apache.commons.lang3.StringUtils;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.text.SimpleDateFormat;
+import java.time.Month;
+import java.time.format.TextStyle;
 import java.util.*;
 
 public class SignBot extends TelegramLongPollingBot {
     protected static final String TOKEN = Components.TOKEN_MY;
     private static int fieldOf = 111;
+    public static void main(String[] args){
+        int index = 0;
+        Month[] mon = Month.values();
+        for (int i=0; i< mon.length/2;i++){
+            System.out.println(getRusMonth(mon[i]) + " " + getRusMonth(mon[i+6]));
+        }
+//        for (Month month : mon){
+//        }
+    }
+    private static String getRusMonth(Month month){
+        String rusVers = month.getDisplayName(TextStyle.FULL_STANDALONE, Locale.forLanguageTag("ru"));
+        return StringUtils.capitalize(rusVers);
+    }
 
     public SignBot(String tokenMy) {
         super(tokenMy);
@@ -28,8 +47,9 @@ public class SignBot extends TelegramLongPollingBot {
                 String text = message.getText();
                 if (text.equals("/start")){
                     SendMessage sendMessage = SendMessage.builder()
-                            .text("Enter your birth date (DD.MM.YYYY)")
+                            .text("Введите дату своего рождения в формате (DD.MM.YYYY)")
                             .chatId(message.getChatId())
+                            .replyMarkup(createMonthKeyboard())
                             .build();
                     try {
                         execute(sendMessage);
@@ -45,16 +65,14 @@ public class SignBot extends TelegramLongPollingBot {
                     if (date[0]>31 || date[1]>12){
                         String er="";
                         if (date[0]>31){
-                            er = "day of month";
+                            er = "день месяца";
                         } else{
-                            er = "month";
+                            er = "месяц";
                         }
-                        String answer = "Your " + er + " is wrong, please enter your data again";
+                        String answer = "Ваш " + er + " неверный, пожалуйста, введите данные снова";
                         sendingMessage(message, answer);
                     } else{
-//                        System.out.println(getSigns(currDate).toString());
-                        sendingMessage(message,"Working");
-                        sendingMessage(message,"Done");
+                        sendingMessage(message,"Знак зодиака: " +   ZodiakUtilits.getSignName(date[0],date[1]));
                     }
                 } else {
                     inCorrectData(message);
@@ -65,9 +83,18 @@ public class SignBot extends TelegramLongPollingBot {
             return;
         }
     }
+
+    private static ReplyKeyboard createMonthKeyboard() {
+        List<List<InlineKeyboardButton>> keyboardRows = new ArrayList<>(6);
+
+        return InlineKeyboardMarkup.builder()
+                .keyboard(keyboardRows)
+                .build();
+    }
+
     private void inCorrectData(Message message){
         SendMessage sendMessage = SendMessage.builder()
-                .text("Enter your birth date correct way (DD.MM.YYYY)")
+                .text("Введите данные в необходимом формате (DD.MM.YYYY)")
                 .chatId(message.getChatId())
                 .build();
         try {
@@ -96,83 +123,10 @@ public class SignBot extends TelegramLongPollingBot {
         return 0;
     }
 
-//    public String getSigns(Calendar calendar) {
-//        HashMap<String, Calendar[]> data = new HashMap<>();
-//        String[] curr = new String[2];
-//        String[] months = new String[2];
-//        for (String in : Components.SIGNS) {
-//            curr = in.split(":");
-//            System.out.println(Arrays.toString(curr));
-//            months = curr[1].split("-");
-//            System.out.println(Arrays.toString(months));
-//            if (
-//                    (Calendar.MONTH == Integer.parseInt(months[0].split(" ")[0]) ||
-//                            Calendar.MONTH == Integer.parseInt(months[1].split(" ")[0])) &&
-//                            (Calendar.DAY_OF_MONTH >= Integer.parseInt(months[0].split(" ")[1]) &&
-//                                    Calendar.DAY_OF_MONTH <= Integer.parseInt(months[1].split(" ")[1])
-//                            )) {
-//                return curr[0];
-//            } else {
-//                return "!!!@#@#@#";
-//            }
-////            Calendar frst = new GregorianCalendar(
-////                    calendar.get(Calendar.YEAR),
-////                    Integer.parseInt(months[0].split(" ")[0]),
-////                    Integer.parseInt(months[0].split(" ")[1])
-////            );
-////            Calendar sec = new GregorianCalendar(
-////                    calendar.get(Calendar.YEAR),
-////                    Integer.parseInt(months[1].split(" ")[0]),
-////                    Integer.parseInt(months[1].split(" ")[1])
-////            );
-////            data.put(curr[0],
-////                    new Calendar[]{
-////                            new GregorianCalendar(
-////                                    calendar.get(Calendar.YEAR),
-////                                    Integer.parseInt(months[0].split(" ")[0]),
-////                                    Integer.parseInt(months[0].split(" ")[1])
-////                            ),
-////                            new GregorianCalendar(
-////                                    calendar.get(Calendar.YEAR),
-////                                    Integer.parseInt(months[1].split(" ")[0]),
-////                                    Integer.parseInt(months[1].split(" ")[1])
-////                            )
-////                    }
-////                    );
-////            System.out.println("!!!!");
-////        }
-////        for (String keys: data.keySet()){
-////            System.out.println(keys);
-////        }
-////        return "";
-//        }
-//        return "LOLOMFG";
-//    }
-
     @Override
     public String getBotUsername() {
         return "Zodiak8_BOT";
     }
-//    private static int getMonth(String str){
-//        int answ = switch (str) {
-//            case "March" -> Calendar.MARCH;
-//            case "April" -> Calendar.APRIL;
-//            case "May" -> Calendar.MAY;
-//            case "June" -> Calendar.JUNE;
-//            case "July" -> Calendar.JULY;
-//            case "August" -> Calendar.AUGUST;
-//            case "September" -> Calendar.SEPTEMBER;
-//            case "October" -> Calendar.OCTOBER;
-//            case "November" -> Calendar.NOVEMBER;
-//            case "December" -> Calendar.DECEMBER;
-//            case "January" -> Calendar.JANUARY;
-//            case "February" -> Calendar.FEBRUARY;
-//            default -> answ = 0;
-//        };
-//        System.out.println(answ);
-//        return answ;
-//    }
-
     @Override
     public String getBotToken() {
         return TOKEN;
